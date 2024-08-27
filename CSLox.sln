@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.9.34622.214
+VisualStudioVersion = 17.11.35219.272
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSLox", "CSLox.csproj", "{49D6E8C7-3636-422F-8581-80A2F648D525}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSLox", "CSLox.csproj", "{D64B39D0-0725-4D94-A044-4766C618FFBF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,15 +11,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{49D6E8C7-3636-422F-8581-80A2F648D525}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{49D6E8C7-3636-422F-8581-80A2F648D525}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{49D6E8C7-3636-422F-8581-80A2F648D525}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{49D6E8C7-3636-422F-8581-80A2F648D525}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D64B39D0-0725-4D94-A044-4766C618FFBF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D64B39D0-0725-4D94-A044-4766C618FFBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D64B39D0-0725-4D94-A044-4766C618FFBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D64B39D0-0725-4D94-A044-4766C618FFBF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {3BAF5BBA-140C-469F-A2DA-8C11F6212519}
+		SolutionGuid = {20A91299-6431-492B-9BA9-EF934D4A96F4}
 	EndGlobalSection
 EndGlobal
