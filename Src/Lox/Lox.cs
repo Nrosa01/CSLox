@@ -23,8 +23,6 @@ namespace CSLox.Src.Lox
                 RunFile(args[0]);
             else
                 RunPrompt();
-
-            Console.ReadLine();
         }
 
         static void Run(in string code)
@@ -51,7 +49,7 @@ namespace CSLox.Src.Lox
             {
                 Console.Write("> ");
                 line = Console.ReadLine();
-                if (line == null)
+                if (line == null || line == "")
                     break;
                 else
                 {
