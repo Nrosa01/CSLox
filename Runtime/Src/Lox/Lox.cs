@@ -14,6 +14,17 @@ namespace CSLox.Src.Lox
 
         static void Main(string[] args)
         {
+            Expr expression = new Expr.Binary(
+      new Expr.Unary(
+          new Token(TokenType.MINUS, "-", null, 1),
+          new Expr.Literal(123)),
+      new Token(TokenType.STAR, "*", null, 1),
+      new Expr.Grouping(
+          new Expr.Literal(45.67)));
+
+            Console.WriteLine(new AstPrinter().Print(expression));
+
+            return;
             if (args.Length > 1)
             {
                 Console.WriteLine("Usage: jlox [script]");
@@ -37,7 +48,19 @@ namespace CSLox.Src.Lox
         static void RunFile(in String filename)
         {
             Console.WriteLine($"Running file {filename}");
-            Run(File.ReadAllText(filename));
+
+            string text = "";
+
+            try
+            {
+                text = File.ReadAllText(filename);
+            }
+            catch (Exception)
+            {
+                Environment.Exit(65);
+            }
+
+            Run(text);
             if (hadError) Environment.Exit(65);
         }
 

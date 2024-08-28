@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "GenerateAST": {
+      "commandName": "Project",
+      "commandLineArgs": "../../../../Runtime/Src/Lox"
+    }
+  }
+}

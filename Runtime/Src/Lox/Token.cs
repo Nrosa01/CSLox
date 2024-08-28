@@ -8,10 +8,10 @@ namespace CSLox.Src.Lox
 {
     internal class Token
     {
-        readonly TokenType type;
-        readonly string lexeme;
-        readonly object? literal;
-        readonly int line;
+        readonly public TokenType type;
+        readonly public string lexeme;
+        readonly public object? literal;
+        readonly public int line;
 
         public Token(TokenType type, string lexeme, object? literal, int line)
         {
