@@ -14,17 +14,6 @@ namespace CSLox.Src.Lox
 
         static void Main(string[] args)
         {
-            Expr expression = new Expr.Binary(
-      new Expr.Unary(
-          new Token(TokenType.MINUS, "-", null, 1),
-          new Expr.Literal(123)),
-      new Token(TokenType.STAR, "*", null, 1),
-      new Expr.Grouping(
-          new Expr.Literal(45.67)));
-
-            Console.WriteLine(new AstPrinter().Print(expression));
-
-            return;
             if (args.Length > 1)
             {
                 Console.WriteLine("Usage: jlox [script]");
@@ -41,8 +30,12 @@ namespace CSLox.Src.Lox
             Scanner scanner = new Scanner(code);
             List<Token> tokens = scanner.ScanTokens();
 
-            foreach (Token token in tokens)
-                Console.WriteLine(token);
+            Parser parser = new Parser(tokens);
+            Expr? expression = parser.Parse();
+
+            if (hadError) return;
+
+            Console.WriteLine(new AstPrinter().Print(expression ?? new Expr.Literal("null")));
         }
 
         static void RunFile(in String filename)
@@ -92,6 +85,14 @@ namespace CSLox.Src.Lox
         {
             Console.Error.WriteLine($"[line {line}] Error {where}: {message}");
             hadError = true;
+        }
+
+        public static void Error(Token token, String message)
+        {
+            if (token.type == TokenType.EOF)
+                Report(token.line, " at end", message);
+            else
+                Report(token.line, $" at '{token.lexeme}'", message);
         }
     }
 }

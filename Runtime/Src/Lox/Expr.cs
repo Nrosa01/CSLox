@@ -37,7 +37,7 @@ internal class Grouping: Expr {
     readonly public Expr expression;
 }
 internal class Literal: Expr {
-    internal Literal(object value) {
+    internal Literal(object? value) {
         this.value = value;
     }
 
@@ -45,7 +45,7 @@ internal class Literal: Expr {
         return visitor.VisitLiteralExpr(this);
     }
 
-    readonly public object value;
+    readonly public object? value;
 }
 internal class Unary: Expr {
     internal Unary(Token @operator, Expr right) {
