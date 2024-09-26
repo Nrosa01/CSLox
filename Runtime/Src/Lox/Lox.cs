@@ -10,8 +10,9 @@ namespace CSLox.Src.Lox
 {
     internal class Lox
     {
+        private static  Interpreter interpreter = new Interpreter();
         static bool hadError = false;
-
+        static bool hadRuntimeError = false;
         static void Main(string[] args)
         {
             if (args.Length > 1)
@@ -33,9 +34,10 @@ namespace CSLox.Src.Lox
             Parser parser = new Parser(tokens);
             Expr? expression = parser.Parse();
 
-            if (hadError) return;
+            if (hadError || expression == null) return;
 
-            Console.WriteLine(new AstPrinter().Print(expression ?? new Expr.Literal("null")));
+            //Console.WriteLine(new AstPrinter().Print(expression ?? new Expr.Literal("null")));
+            interpreter.Interpret(expression);
         }
 
         static void RunFile(in String filename)
@@ -55,6 +57,7 @@ namespace CSLox.Src.Lox
 
             Run(text);
             if (hadError) Environment.Exit(65);
+            if (hadRuntimeError) Environment.Exit(70);
         }
 
         static void RunPrompt()
@@ -93,6 +96,12 @@ namespace CSLox.Src.Lox
                 Report(token.line, " at end", message);
             else
                 Report(token.line, $" at '{token.lexeme}'", message);
+        }
+
+        public static void RuntimeError(RuntimeError error)
+        {
+            Console.WriteLine($"{error.Message} \n[line {error.token.line}]");
+            hadRuntimeError = true;
         }
     }
 }
