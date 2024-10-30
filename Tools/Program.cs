@@ -11,10 +11,20 @@ string outputDir = args[0];
 
 DefineAst(outputDir, "Expr",
         [
+            "Assign   : Token name, Expr value",
             "Binary   : Expr left, Token @operator, Expr right",
             "Grouping : Expr expression",
-            "Literal  : object value",
-            "Unary    : Token @operator, Expr right"
+            "Literal  : object? value",
+            "Unary    : Token @operator, Expr right",
+            "Variable : Token name"
+        ]);
+
+DefineAst(outputDir, "Stmt",
+        [
+            "Block      : List<Stmt> statements",
+            "Expression   : Expr expression",
+            "Print : Expr expression",
+            "Var        : Token name, Expr? initializer"
         ]);
 
 static void DefineAst(string outputDir, string baseName, List<string> types)

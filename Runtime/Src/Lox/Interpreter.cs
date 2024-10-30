@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace CSLox.Src.Lox
 {
-    internal class Interpreter : Expr.IVisitor<object?>
+    internal class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
     {
+        private Environment environment = new Environment();
         public object? VisitBinaryExpr(Expr.Binary expr)
         {
             object? left = Evaluate(expr.left);
@@ -53,12 +54,12 @@ namespace CSLox.Src.Lox
             }
         }
 
-        public void Interpret(Expr? expression)
+        public void Interpret(List<Stmt> statements)
         {
             try
             {
-                Object? value = Evaluate(expression);
-                Console.WriteLine(Stringify(value));
+                foreach (Stmt statement in statements)
+                    Execute(statement);
             }
             catch (RuntimeError error)
             {
@@ -66,15 +67,21 @@ namespace CSLox.Src.Lox
             }
         }
 
+        private void Execute(Stmt stmt)
+        {
+            stmt.Accept(this);
+        }
+
         private string? Stringify(object? value)
         {
             if (value == null) return "nil";
-                
-            if (value is double) {
+
+            if (value is double)
+            {
                 string? text = value?.ToString();
                 if (text?.EndsWith(".0") ?? false)
                     text = text[0..(text.Length - 2)];
-                
+
                 return text;
             }
 
@@ -131,6 +138,63 @@ namespace CSLox.Src.Lox
             if (right == null) return false;
             if (right is bool) return (bool)right;
             return true;
+        }
+
+        public object? VisitExpressionStmt(Stmt.Expression stmt)
+        {
+            Evaluate(stmt.expression);
+            return null;
+        }
+
+        public object? VisitPrintStmt(Stmt.Print stmt)
+        {
+            object? value = Evaluate(stmt.expression);
+            Console.WriteLine(Stringify(value));
+            return null;
+        }
+
+        public object? VisitVariableExpr(Expr.Variable expr)
+        {
+            return environment.Get(expr.name);
+        }
+
+        public object? VisitVarStmt(Stmt.Var stmt)
+        {
+            object? value = null;
+            if (stmt.initializer != null)
+                value = Evaluate(stmt.initializer);
+
+            environment.Define(stmt.name.lexeme, value);
+            return null;
+        }
+
+        public object? VisitAssignExpr(Expr.Assign expr)
+        {
+            object? value = Evaluate(expr.value);
+            environment.Assign(expr.name, value);
+            return value;
+        }
+
+        public object? VisitBlockStmt(Stmt.Block stmt)
+        {
+            ExecuteBlock(stmt.statements, new Environment(environment));
+            return null;
+        }
+
+        private void ExecuteBlock(List<Stmt> statements, Environment environment)
+        {
+            Environment previous = this.environment;
+            try
+            {
+                this.environment = environment;
+
+                foreach (Stmt statement in statements)
+                    Execute(statement);
+            }
+            finally
+            {
+                this.environment = previous;
+            }
         }
     }
 }

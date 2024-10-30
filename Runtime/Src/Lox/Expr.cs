@@ -5,11 +5,26 @@
     public abstract class Expr
     {
         internal interface IVisitor<T> {
+            T VisitAssignExpr(Assign expr);
             T VisitBinaryExpr(Binary expr);
             T VisitGroupingExpr(Grouping expr);
             T VisitLiteralExpr(Literal expr);
             T VisitUnaryExpr(Unary expr);
+            T VisitVariableExpr(Variable expr);
         }
+internal class Assign: Expr {
+    internal Assign(Token name, Expr value) {
+        this.name = name;
+        this.value = value;
+    }
+
+    internal override T Accept<T>(IVisitor<T> visitor) {
+        return visitor.VisitAssignExpr(this);
+    }
+
+    readonly public Token name;
+    readonly public Expr value;
+}
 internal class Binary: Expr {
     internal Binary(Expr left, Token @operator, Expr right) {
         this.left = left;
@@ -59,6 +74,17 @@ internal class Unary: Expr {
 
     readonly public Token @operator;
     readonly public Expr right;
+}
+internal class Variable: Expr {
+    internal Variable(Token name) {
+        this.name = name;
+    }
+
+    internal override T Accept<T>(IVisitor<T> visitor) {
+        return visitor.VisitVariableExpr(this);
+    }
+
+    readonly public Token name;
 }
 
         internal abstract T Accept<T>(IVisitor<T> visitor);

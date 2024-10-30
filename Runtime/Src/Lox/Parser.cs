@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -20,22 +21,101 @@ namespace CSLox.Src.Lox
             this.tokens = tokens;
         }
 
-        public Expr? Parse()
+        public List<Stmt> Parse()
+        {
+            List<Stmt> statements = new List<Stmt>();
+            while (!IsAtEnd())
+            {
+                statements.Add(Declaration());
+            }
+
+            return statements;
+        }
+
+        private Stmt Declaration()
         {
             try
             {
-                return Expression();
+                if (Match(VAR)) return VarDeclaration();
+                
+                return Statement();
             }
-            catch (ParseError error)
+            catch (ParseError _)
             {
-                Console.WriteLine(error);
-                return null;
+                Synchronize();
+                throw;
             }
+        }
+
+        private Stmt VarDeclaration()
+        {
+            Token name = Consume(IDENTIFIER, "Expect variable name.");
+
+            Expr? initializer = null;
+            if (Match(EQUAL))
+                initializer = Expression();
+
+            Consume(SEMICOLON, "Expect ';' after variable declaration");
+            return new Stmt.Var(name, initializer);
+        }
+
+        private Stmt Statement()
+        {
+            if (Match(PRINT)) return PrintStatement();
+            if (Match(LEFT_BRACE)) return new Stmt.Block(Block());
+
+            return ExpressionStatement();
+        }
+
+        private List<Stmt> Block()
+        {
+            List<Stmt> statements = new List<Stmt>();
+
+            while(!Check(RIGHT_BRACE) && !IsAtEnd())
+                statements.Add(Declaration());
+
+            Consume(RIGHT_BRACE, "Expect '}' after block.");
+            return statements;
+        }
+
+        private Stmt PrintStatement()
+        {
+            Expr value = Expression();
+            Consume(SEMICOLON, "Expect ';' after value.");
+            return new Stmt.Print(value);
+        }
+
+        private Stmt ExpressionStatement()
+        {
+            Expr expr = Expression();
+            Consume(SEMICOLON, "Expect ';' after value.");
+            return new Stmt.Expression(expr);
         }
 
         private Expr Expression()
         {
-            return Equality();
+            return Assignment();
+        }
+
+        private Expr Assignment()
+        {
+            Expr expr = Equality();
+
+            if(Match(EQUAL))
+            {
+                Token equals = Previous();
+                Expr value = Assignment();
+
+                if(expr is Expr.Variable variable)
+                {
+                    Token name = variable.name;
+                    return new Expr.Assign(name, value);
+                }
+
+                Error(equals, "Invalid assigment target.");
+            }
+
+            return expr;
         }
 
         private Expr Equality()
@@ -112,10 +192,9 @@ namespace CSLox.Src.Lox
             if (Match(TRUE)) return new Expr.Literal(true);
             if (Match(NIL)) return new Expr.Literal(null);
 
-            if (Match(NUMBER, STRING))
-            {
-                return new Expr.Literal(Previous().literal);
-            }
+            if (Match(NUMBER, STRING)) return new Expr.Literal(Previous().literal);
+
+            if (Match(IDENTIFIER)) return new Expr.Variable(Previous());
 
             if (Match(LEFT_PAREN))
             {
