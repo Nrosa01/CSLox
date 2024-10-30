@@ -61,10 +61,74 @@ namespace CSLox.Src.Lox
 
         private Stmt Statement()
         {
+            if (Match(FOR)) return ForStatement();
+            if (Match(IF)) return IfStatement();
             if (Match(PRINT)) return PrintStatement();
+            if (Match(WHILE)) return WhileStatement();
             if (Match(LEFT_BRACE)) return new Stmt.Block(Block());
 
             return ExpressionStatement();
+        }
+
+        private Stmt ForStatement()
+        {
+            Consume(LEFT_PAREN, "Expected 'C' after 'for'.");
+            Stmt? initializer;
+            if (Match(SEMICOLON))
+                initializer = null;
+            else if (Match(VAR))
+                initializer = VarDeclaration();
+            else
+                initializer = ExpressionStatement();
+
+            Expr? condition = null;
+            if (!Check(SEMICOLON))
+                condition = Expression();
+            Consume(SEMICOLON, "Expect ';' after loop condition.");
+
+            Expr? increment = null;
+            if (!Check(SEMICOLON))
+                increment = Expression();
+            Consume(RIGHT_PAREN, "Expect ')' after for clauses.");
+
+            Stmt body = Statement();
+
+            if (increment != null)
+                body = new Stmt.Block(
+                    [body, 
+                    new Stmt.Expression(increment)]);
+
+            if (condition == null) condition = new Expr.Literal(true);
+            body = new Stmt.While(condition, body);
+
+            if (initializer != null)
+                body = new Stmt.Block([initializer, body]);
+
+            return body;
+        }
+
+        private Stmt WhileStatement()
+        {
+            Consume(LEFT_PAREN, "Expect '(' after 'while'.");
+            Expr condition = Expression();
+            Consume(RIGHT_PAREN, "Expect ')' after condition.");
+            Stmt body = Statement();
+
+            return new Stmt.While(condition, body);
+        }
+
+        private Stmt IfStatement()
+        {
+            Consume(LEFT_PAREN, "Expect '(' after 'if'.");
+            Expr condition = Expression();
+            Consume(RIGHT_PAREN, "Expect ')' after if condition");
+
+            Stmt thenBranch = Statement();
+            Stmt? elseBranch = null;
+            if (Match(ELSE))
+                elseBranch = Statement();
+
+            return new Stmt.If(condition, thenBranch, elseBranch);
         }
 
         private List<Stmt> Block()
@@ -99,7 +163,7 @@ namespace CSLox.Src.Lox
 
         private Expr Assignment()
         {
-            Expr expr = Equality();
+            Expr expr = Or();
 
             if(Match(EQUAL))
             {
@@ -113,6 +177,34 @@ namespace CSLox.Src.Lox
                 }
 
                 Error(equals, "Invalid assigment target.");
+            }
+
+            return expr;
+        }
+
+        private Expr Or()
+        {
+            Expr expr = And();
+
+            while (Match(OR))
+            {
+                Token @operator = Previous();
+                Expr right = And();
+                expr = new Expr.Logical(expr, @operator, right);
+            }
+
+            return expr;
+        }
+
+        private Expr And()
+        {
+            Expr expr = Equality();
+
+            while (Match(AND))
+            {
+                Token @operator = Previous();
+                Expr right = Equality();
+                expr = new Expr.Logical(expr, @operator, right);
             }
 
             return expr;

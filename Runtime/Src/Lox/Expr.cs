@@ -9,6 +9,7 @@
             T VisitBinaryExpr(Binary expr);
             T VisitGroupingExpr(Grouping expr);
             T VisitLiteralExpr(Literal expr);
+            T VisitLogicalExpr(Logical expr);
             T VisitUnaryExpr(Unary expr);
             T VisitVariableExpr(Variable expr);
         }
@@ -61,6 +62,21 @@ internal class Literal: Expr {
     }
 
     readonly public object? value;
+}
+internal class Logical: Expr {
+    internal Logical(Expr left, Token @operator, Expr right) {
+        this.left = left;
+        this.@operator = @operator;
+        this.right = right;
+    }
+
+    internal override T Accept<T>(IVisitor<T> visitor) {
+        return visitor.VisitLogicalExpr(this);
+    }
+
+    readonly public Expr left;
+    readonly public Token @operator;
+    readonly public Expr right;
 }
 internal class Unary: Expr {
     internal Unary(Token @operator, Expr right) {

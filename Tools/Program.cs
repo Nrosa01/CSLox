@@ -15,17 +15,21 @@ DefineAst(outputDir, "Expr",
             "Binary   : Expr left, Token @operator, Expr right",
             "Grouping : Expr expression",
             "Literal  : object? value",
+            "Logical   : Expr left, Token @operator, Expr right",
             "Unary    : Token @operator, Expr right",
             "Variable : Token name"
         ]);
 
 DefineAst(outputDir, "Stmt",
         [
-            "Block      : List<Stmt> statements",
+            "Block           : List<Stmt> statements",
             "Expression   : Expr expression",
-            "Print : Expr expression",
-            "Var        : Token name, Expr? initializer"
+            "If                : Expr condition, Stmt thenBranch, Stmt? elseBranch",
+            "Print           : Expr expression",
+            "Var            : Token name, Expr? initializer",
+            "While      : Expr condition, Stmt body"
         ]);
+
 
 static void DefineAst(string outputDir, string baseName, List<string> types)
 {

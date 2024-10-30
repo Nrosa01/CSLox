@@ -7,8 +7,10 @@
         internal interface IVisitor<T> {
             T VisitBlockStmt(Block stmt);
             T VisitExpressionStmt(Expression stmt);
+            T VisitIfStmt(If stmt);
             T VisitPrintStmt(Print stmt);
             T VisitVarStmt(Var stmt);
+            T VisitWhileStmt(While stmt);
         }
 internal class Block: Stmt {
     internal Block(List<Stmt> statements) {
@@ -31,6 +33,21 @@ internal class Expression: Stmt {
     }
 
     readonly public Expr expression;
+}
+internal class If: Stmt {
+    internal If(Expr condition, Stmt thenBranch, Stmt? elseBranch) {
+        this.condition = condition;
+        this.thenBranch = thenBranch;
+        this.elseBranch = elseBranch;
+    }
+
+    internal override T Accept<T>(IVisitor<T> visitor) {
+        return visitor.VisitIfStmt(this);
+    }
+
+    readonly public Expr condition;
+    readonly public Stmt thenBranch;
+    readonly public Stmt? elseBranch;
 }
 internal class Print: Stmt {
     internal Print(Expr expression) {
@@ -55,6 +72,19 @@ internal class Var: Stmt {
 
     readonly public Token name;
     readonly public Expr? initializer;
+}
+internal class While: Stmt {
+    internal While(Expr condition, Stmt body) {
+        this.condition = condition;
+        this.body = body;
+    }
+
+    internal override T Accept<T>(IVisitor<T> visitor) {
+        return visitor.VisitWhileStmt(this);
+    }
+
+    readonly public Expr condition;
+    readonly public Stmt body;
 }
 
         internal abstract T Accept<T>(IVisitor<T> visitor);
