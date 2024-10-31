@@ -1,0 +1,2 @@
+C# direct port of jlox from https://craftinginterpreters.com/.
+Right now it doesn't have anything different from the book version as I wanted to learn the basics. Once I finish with the bytecode interpreter I might return to this one to complete the challenges.

@@ -7,8 +7,10 @@
         internal interface IVisitor<T> {
             T VisitBlockStmt(Block stmt);
             T VisitExpressionStmt(Expression stmt);
+            T VisitFunctionStmt(Function stmt);
             T VisitIfStmt(If stmt);
             T VisitPrintStmt(Print stmt);
+            T VisitReturnStmt(Return stmt);
             T VisitVarStmt(Var stmt);
             T VisitWhileStmt(While stmt);
         }
@@ -33,6 +35,21 @@ internal class Expression: Stmt {
     }
 
     readonly public Expr expression;
+}
+internal class Function: Stmt {
+    internal Function(Token name, List<Token> @params, List<Stmt> body) {
+        this.name = name;
+        this.@params = @params;
+        this.body = body;
+    }
+
+    internal override T Accept<T>(IVisitor<T> visitor) {
+        return visitor.VisitFunctionStmt(this);
+    }
+
+    readonly public Token name;
+    readonly public List<Token> @params;
+    readonly public List<Stmt> body;
 }
 internal class If: Stmt {
     internal If(Expr condition, Stmt thenBranch, Stmt? elseBranch) {
@@ -59,6 +76,19 @@ internal class Print: Stmt {
     }
 
     readonly public Expr expression;
+}
+internal class Return: Stmt {
+    internal Return(Token keyword, Expr? value) {
+        this.keyword = keyword;
+        this.value = value;
+    }
+
+    internal override T Accept<T>(IVisitor<T> visitor) {
+        return visitor.VisitReturnStmt(this);
+    }
+
+    readonly public Token keyword;
+    readonly public Expr? value;
 }
 internal class Var: Stmt {
     internal Var(Token name, Expr? initializer) {

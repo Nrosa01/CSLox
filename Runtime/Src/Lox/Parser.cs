@@ -11,7 +11,7 @@ namespace CSLox.Src.Lox
 
     internal class Parser
     {
-        private class ParseError: Exception { }
+        private class ParseError : Exception { }
 
         private readonly List<Token> tokens;
         private int current = 0;
@@ -36,8 +36,9 @@ namespace CSLox.Src.Lox
         {
             try
             {
+                if (Match(FUN)) return Function("function");
                 if (Match(VAR)) return VarDeclaration();
-                
+
                 return Statement();
             }
             catch (ParseError _)
@@ -45,6 +46,30 @@ namespace CSLox.Src.Lox
                 Synchronize();
                 throw;
             }
+        }
+
+        private Stmt.Function Function(string kind)
+        {
+            Token name = Consume(IDENTIFIER, $"Expect {kind} name.");
+            Consume(LEFT_PAREN, $"Expect '(' after {kind} name.");
+
+            List<Token> parameters = [];
+            if (!Check(RIGHT_PAREN))
+            {
+                do
+                {
+                    if (parameters.Count >= 255)
+                        Error(Peek(), "Can't have more than 255 parameters");
+
+                    parameters.Add(Consume(IDENTIFIER, "Expect parameter name"));
+                } while (Match(COMMA));
+
+            }
+            Consume(RIGHT_PAREN, "Expect ')' after parameters.");
+
+            Consume(LEFT_BRACE, $"Expect '{{' before {kind} body.");
+            List<Stmt> body = Block();
+            return new Stmt.Function(name, parameters, body);
         }
 
         private Stmt VarDeclaration()
@@ -64,10 +89,25 @@ namespace CSLox.Src.Lox
             if (Match(FOR)) return ForStatement();
             if (Match(IF)) return IfStatement();
             if (Match(PRINT)) return PrintStatement();
+            if (Match(RETURN)) return ReturnStatement;
             if (Match(WHILE)) return WhileStatement();
             if (Match(LEFT_BRACE)) return new Stmt.Block(Block());
 
             return ExpressionStatement();
+        }
+
+        private Stmt ReturnStatement
+        {
+            get
+            {
+                Token keyword = Previous();
+                Expr? value = null;
+                if (!Check(SEMICOLON))
+                    value = Expression();
+
+                Consume(SEMICOLON, "Expect ';' after return value.");
+                return new Stmt.Return(keyword, value);
+            }
         }
 
         private Stmt ForStatement()
@@ -95,7 +135,7 @@ namespace CSLox.Src.Lox
 
             if (increment != null)
                 body = new Stmt.Block(
-                    [body, 
+                    [body,
                     new Stmt.Expression(increment)]);
 
             if (condition == null) condition = new Expr.Literal(true);
@@ -135,7 +175,7 @@ namespace CSLox.Src.Lox
         {
             List<Stmt> statements = new List<Stmt>();
 
-            while(!Check(RIGHT_BRACE) && !IsAtEnd())
+            while (!Check(RIGHT_BRACE) && !IsAtEnd())
                 statements.Add(Declaration());
 
             Consume(RIGHT_BRACE, "Expect '}' after block.");
@@ -165,12 +205,12 @@ namespace CSLox.Src.Lox
         {
             Expr expr = Or();
 
-            if(Match(EQUAL))
+            if (Match(EQUAL))
             {
                 Token equals = Previous();
                 Expr value = Assignment();
 
-                if(expr is Expr.Variable variable)
+                if (expr is Expr.Variable variable)
                 {
                     Token name = variable.name;
                     return new Expr.Assign(name, value);
@@ -268,14 +308,48 @@ namespace CSLox.Src.Lox
 
         private Expr Unary()
         {
-            if(Match(BANG,MINUS))
+            if (Match(BANG, MINUS))
             {
                 Token @operator = Previous();
                 Expr right = Unary();
                 return new Expr.Unary(@operator, right);
             }
 
-            return Primary();
+            return Call();
+        }
+
+        private Expr Call()
+        {
+            Expr expr = Primary();
+
+            while (true)
+            {
+                if (Match(LEFT_PAREN))
+                    expr = FinishCall(expr);
+                else
+                    break;
+            }
+
+            return expr;
+        }
+
+        private Expr FinishCall(Expr callee)
+        {
+            List<Expr> arguments = new List<Expr>();
+            if (!Check(RIGHT_PAREN))
+                do
+                {
+                    if (arguments.Count >= 255)
+                    {
+                        Error(Peek(), "Can't have more than 255 arguments.");
+                    }
+
+                    arguments.Add(Expression());
+                } while (Match(COMMA));
+
+            Token paren = Consume(RIGHT_PAREN, "Expect ')' after arguments.");
+
+            return new Expr.Call(callee, paren, arguments);
         }
 
         private Expr Primary()

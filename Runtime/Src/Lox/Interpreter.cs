@@ -8,7 +8,19 @@ namespace CSLox.Src.Lox
 {
     internal class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
     {
-        private Environment environment = new Environment();
+        internal readonly Environment globals = new Environment();
+        private Environment environment;
+
+        public Interpreter()
+        {
+            globals.Define("clock", new NativeFunction(0, (interpreter, arguments) => { 
+                return DateTimeOffset.Now.ToUnixTimeMilliseconds() / 1000.0;
+            }));
+
+            environment = globals;
+        }
+
+
         public object? VisitBinaryExpr(Expr.Binary expr)
         {
             object? left = Evaluate(expr.left);
@@ -181,7 +193,7 @@ namespace CSLox.Src.Lox
             return null;
         }
 
-        private void ExecuteBlock(List<Stmt> statements, Environment environment)
+        internal void ExecuteBlock(List<Stmt> statements, Environment environment)
         {
             Environment previous = this.environment;
             try
@@ -228,6 +240,42 @@ namespace CSLox.Src.Lox
                 Execute(stmt.body);
 
             return null;
+        }
+
+        public object? VisitCallExpr(Expr.Call expr)
+        {
+            object? callee = Evaluate(expr.callee);
+
+            List<object?> arguments = [];
+            foreach (Expr argument in expr.arguments)
+                arguments.Add(Evaluate(argument));
+
+            if (callee is ILoxCallable func)
+            {
+                if (arguments.Count != func.Arity)
+                    throw new RuntimeError(expr.paren, $"Expected {func.Arity} arguments but got {arguments.Count}.");
+
+                return func.call(this, arguments);
+            }
+            else
+            {
+                throw new RuntimeError(expr.paren, "Can only call functions and classes.");
+            }
+        }
+
+        public object? VisitFunctionStmt(Stmt.Function stmt)
+        {
+            LoxFunction function = new LoxFunction(stmt, environment);
+            environment.Define(stmt.name.lexeme, function);
+            return null;
+        }
+
+        public object? VisitReturnStmt(Stmt.Return stmt)
+        {
+            object? value = null;
+            if (stmt.value != null) value = Evaluate(stmt.value);
+
+            throw new Return(value);
         }
     }
 }

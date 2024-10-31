@@ -7,6 +7,7 @@
         internal interface IVisitor<T> {
             T VisitAssignExpr(Assign expr);
             T VisitBinaryExpr(Binary expr);
+            T VisitCallExpr(Call expr);
             T VisitGroupingExpr(Grouping expr);
             T VisitLiteralExpr(Literal expr);
             T VisitLogicalExpr(Logical expr);
@@ -40,6 +41,21 @@ internal class Binary: Expr {
     readonly public Expr left;
     readonly public Token @operator;
     readonly public Expr right;
+}
+internal class Call: Expr {
+    internal Call(Expr callee, Token paren, List<Expr> arguments) {
+        this.callee = callee;
+        this.paren = paren;
+        this.arguments = arguments;
+    }
+
+    internal override T Accept<T>(IVisitor<T> visitor) {
+        return visitor.VisitCallExpr(this);
+    }
+
+    readonly public Expr callee;
+    readonly public Token paren;
+    readonly public List<Expr> arguments;
 }
 internal class Grouping: Expr {
     internal Grouping(Expr expression) {
