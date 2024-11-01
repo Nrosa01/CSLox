@@ -8,6 +8,7 @@ namespace CSLox.Src.Lox
 {
     internal class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
     {
+        internal readonly Dictionary<Expr, int> locals = [];
         internal readonly Environment globals = new Environment();
         private Environment environment;
 
@@ -165,9 +166,14 @@ namespace CSLox.Src.Lox
             return null;
         }
 
-        public object? VisitVariableExpr(Expr.Variable expr)
+        public object? VisitVariableExpr(Expr.Variable expr) => LookUpVariable(expr.name, expr);
+
+        private object? LookUpVariable(Token name, Expr expr)
         {
-            return environment.Get(expr.name);
+            if (locals.TryGetValue(expr, out int distance))
+                return environment.GetAt(distance, name.lexeme);
+            else
+                return globals.Get(name)    ;
         }
 
         public object? VisitVarStmt(Stmt.Var stmt)
@@ -183,7 +189,12 @@ namespace CSLox.Src.Lox
         public object? VisitAssignExpr(Expr.Assign expr)
         {
             object? value = Evaluate(expr.value);
-            environment.Assign(expr.name, value);
+
+            if (locals.TryGetValue(expr, out int distance))
+                environment.AssignAt(distance, expr.name, value);
+            else
+                globals.Assign(expr.name, value);
+
             return value;
         }
 
@@ -276,6 +287,11 @@ namespace CSLox.Src.Lox
             if (stmt.value != null) value = Evaluate(stmt.value);
 
             throw new Return(value);
+        }
+
+        internal void Resolve(Expr expr, int depth)
+        {
+            locals[expr] = depth;
         }
     }
 }

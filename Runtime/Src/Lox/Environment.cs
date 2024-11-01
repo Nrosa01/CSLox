@@ -18,7 +18,7 @@ namespace CSLox.Src.Lox
             this.enclosing = enclosing;
         }
 
-        public void Define(string name, object? value) => values.Add(name, value);
+        public void Define(string name, object? value) => values[name] =  value;
 
         public object? Get(Token name)
         {
@@ -47,5 +47,18 @@ namespace CSLox.Src.Lox
 
             throw new RuntimeError(name, $"Undefined variable '{name.lexeme}'.");
         }
+
+        internal object? GetAt(int distance, string name) => Ancestor(distance)?.values[name];
+
+        private Environment? Ancestor(int distance)
+        {
+            Environment? environment = this;
+            for (int i = 0; i < distance; i++)
+                environment = environment?.enclosing;
+
+            return environment;
+        }
+
+        internal void AssignAt(int distance, Token name, object? value) => Ancestor(distance)?.values.Add(name.lexeme, value);
     }
 }

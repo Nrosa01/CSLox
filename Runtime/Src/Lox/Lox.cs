@@ -29,13 +29,18 @@ namespace CSLox.Src.Lox
 
         static void Run(in string code)
         {
-            Scanner scanner = new Scanner(code);
+            Scanner scanner = new(code);
             List<Token> tokens = scanner.ScanTokens();
 
-            Parser parser = new Parser(tokens);
+            Parser parser = new(tokens);
             List<Stmt> statements = parser.Parse();
 
             if (hadError || statements == null) return;
+
+            Resolver resolver = new(interpreter);
+            resolver.Resolve(statements);
+
+            if (hadError) return;
 
             //Console.WriteLine(new AstPrinter().Print(expression ?? new Expr.Literal("null")));
             interpreter.Interpret(statements);
