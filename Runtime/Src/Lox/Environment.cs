@@ -22,8 +22,8 @@ namespace CSLox.Src.Lox
 
         public object? Get(Token name)
         {
-            if (values.ContainsKey(name.lexeme))
-                return values[name.lexeme];
+            if (values.TryGetValue(name.lexeme, out object? value))
+                return value;
 
             if (enclosing != null) return enclosing.Get(name);
 

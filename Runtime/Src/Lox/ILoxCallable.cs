@@ -4,6 +4,6 @@
     {
         int Arity { get; }
 
-        object? call(Interpreter interpreter, List<object?> arguments);
+        object? Call(Interpreter interpreter, List<object?> arguments);
     }
 }

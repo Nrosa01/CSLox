@@ -9,7 +9,7 @@ namespace CSLox.Src.Lox
     internal class Interpreter : Expr.IVisitor<object?>, Stmt.IVisitor<object?>
     {
         internal readonly Dictionary<Expr, int> locals = [];
-        internal readonly Environment globals = new Environment();
+        internal readonly Environment globals = new();
         private Environment environment;
 
         public Interpreter()
@@ -266,7 +266,7 @@ namespace CSLox.Src.Lox
                 if (arguments.Count != func.Arity)
                     throw new RuntimeError(expr.paren, $"Expected {func.Arity} arguments but got {arguments.Count}.");
 
-                return func.call(this, arguments);
+                return func.Call(this, arguments);
             }
             else
             {
@@ -276,7 +276,7 @@ namespace CSLox.Src.Lox
 
         public object? VisitFunctionStmt(Stmt.Function stmt)
         {
-            LoxFunction function = new LoxFunction(stmt, environment);
+            LoxFunction function = new LoxFunction(stmt, environment, false);
             environment.Define(stmt.name.lexeme, function);
             return null;
         }
@@ -292,6 +292,46 @@ namespace CSLox.Src.Lox
         internal void Resolve(Expr expr, int depth)
         {
             locals[expr] = depth;
+        }
+
+        public object? VisitClassStmt(Stmt.Class stmt)
+        {
+            environment.Define(stmt.name.lexeme, null);
+
+            Dictionary<string, LoxFunction> methods = [];
+            foreach (Stmt.Function method in stmt.methods)
+            {
+                LoxFunction function = new LoxFunction(method, environment, method.name.lexeme.Equals("init"));
+                methods[method.name.lexeme] = function;
+            }
+
+            LoxClass klass = new LoxClass(stmt.name.lexeme, methods);
+            environment.Assign(stmt.name, klass);
+            return null;
+        }
+
+        public object? VisitGetExpr(Expr.Get expr)
+        {
+            object? obj = Evaluate(expr.@object);
+            if (obj is LoxInstance)
+                return ((LoxInstance)obj).Get(expr.name);
+
+            throw new RuntimeError(expr.name, "Only instances have properties");
+        }
+
+        public object? VisitSetExpr(Expr.Set expr)
+        {
+            object? obj = Evaluate(expr.@object);
+            if (obj is not LoxInstance) throw new RuntimeError(expr.name, "Only instances have fields");
+
+            object? value = Evaluate(expr.value);
+            ((LoxInstance)obj).Set(expr.name, value);
+            return value;
+        }
+
+        public object? VisitThisExpr(Expr.This expr)
+        {
+            return LookUpVariable(expr.keyword, expr);
         }
     }
 }

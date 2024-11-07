@@ -10,11 +10,19 @@ namespace CSLox.Src.Lox
     {
         private readonly Stack<Dictionary<string, bool>> scopes = new Stack<Dictionary<string, bool>>();
         private FunctionType currentFunction = FunctionType.NONE;
+        private ClassType currentClass = ClassType.NONE;
 
         private enum FunctionType
         {
             NONE,
-            FUNCTION
+            FUNCTION,
+            INITIALIZER,
+            METHOD
+        }
+
+        private enum ClassType
+        {
+            NONE, CLASS
         }
 
         public object? VisitAssignExpr(Expr.Assign expr)
@@ -133,7 +141,12 @@ namespace CSLox.Src.Lox
                 Lox.Error(stmt.keyword, "Can't return from top-level code.");
 
             if (stmt.value != null)
+            {
+                if(currentFunction == FunctionType.INITIALIZER)
+                    Lox.Error(stmt.keyword, "Can't return a value from an initializer");
+
                 Resolve(stmt.value);
+            }
 
             return null;
         }
@@ -155,11 +168,11 @@ namespace CSLox.Src.Lox
 
         private void ResolveLocal(Expr expr, Token name)
         {
-            for (int i = scopes.Count - 1; i >= 0; i--)
+            for (int i = 0; i < scopes.Count; i++)
             {
                 if (scopes.ElementAt(i).ContainsKey(name.lexeme))
                 {
-                    interpreter.Resolve(expr, scopes.Count - 1 - i);
+                    interpreter.Resolve(expr, i);
                     return;
                 }
             }
@@ -195,6 +208,57 @@ namespace CSLox.Src.Lox
         {
             Resolve(stmt.condition);
             Resolve(stmt.body);
+            return null;
+        }
+
+        public object? VisitClassStmt(Stmt.Class stmt)
+        {
+            ClassType enclosingClass = currentClass;
+            currentClass = ClassType.CLASS;
+
+            Declare(stmt.name);
+            Define(stmt.name);
+
+            BeginScope();
+            scopes.Peek().Add("this", true);
+
+            foreach (Stmt.Function method in stmt.methods)
+            {
+                FunctionType declaration = FunctionType.METHOD;
+                if (method.name.lexeme.Equals("init"))
+                    declaration = FunctionType.INITIALIZER;
+
+                ResolveFunction(method, declaration);
+            }
+
+            EndScope();
+            
+            currentClass = enclosingClass;
+            return null;
+        }
+
+        public object? VisitGetExpr(Expr.Get expr)
+        {
+            Resolve(expr.@object);
+            return null;
+        }
+
+        public object? VisitSetExpr(Expr.Set expr)
+        {
+            Resolve(expr.value);
+            Resolve(expr.@object);
+            return null;
+        }
+
+        public object? VisitThisExpr(Expr.This expr)
+        {
+            if(currentClass == ClassType.NONE)
+            {
+                Lox.Error(expr.keyword, "Can't use 'this' outside of a class.");
+                return null;
+            }
+
+            ResolveLocal(expr, expr.keyword);
             return null;
         }
     }

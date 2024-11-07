@@ -15,7 +15,7 @@ namespace CSLox.Src.Lox
 
         public int Arity => arity;
 
-        public object? call(Interpreter interpreter, List<object?> arguments) => func.Invoke(interpreter, arguments);
+        public object? Call(Interpreter interpreter, List<object?> arguments) => func.Invoke(interpreter, arguments);
 
         public override string ToString() => "<native fn>";
     }

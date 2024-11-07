@@ -36,6 +36,7 @@ namespace CSLox.Src.Lox
         {
             try
             {
+                if (Match(CLASS)) return ClassDeclaration();
                 if (Match(FUN)) return Function("function");
                 if (Match(VAR)) return VarDeclaration();
 
@@ -46,6 +47,20 @@ namespace CSLox.Src.Lox
                 Synchronize();
                 throw;
             }
+        }
+
+        private Stmt ClassDeclaration()
+        {
+            Token name = Consume(IDENTIFIER, "Expect class name.");
+            Consume(LEFT_BRACE, "Expect  '{' before class body.");
+
+            List<Stmt.Function> methods = new List<Stmt.Function>();
+            while (!Check(RIGHT_BRACE) && !IsAtEnd())
+                methods.Add(Function("method"));
+            
+            Consume(RIGHT_BRACE, "Expect  '}' before class body.");
+
+            return new Stmt.Class(name, methods);
         }
 
         private Stmt.Function Function(string kind)
@@ -214,6 +229,9 @@ namespace CSLox.Src.Lox
                 {
                     Token name = variable.name;
                     return new Expr.Assign(name, value);
+                } else if (expr is Expr.Get){
+                    Expr.Get get = (Expr.Get)expr;
+                    return new Expr.Set(get.@object, get.name, value);
                 }
 
                 Error(equals, "Invalid assigment target.");
@@ -326,6 +344,11 @@ namespace CSLox.Src.Lox
             {
                 if (Match(LEFT_PAREN))
                     expr = FinishCall(expr);
+                else if(Match(DOT))
+                {
+                    Token name = Consume(IDENTIFIER, "Expect property name after '.'.");
+                    expr = new Expr.Get(expr, name);
+                }
                 else
                     break;
             }
@@ -359,6 +382,8 @@ namespace CSLox.Src.Lox
             if (Match(NIL)) return new Expr.Literal(null);
 
             if (Match(NUMBER, STRING)) return new Expr.Literal(Previous().literal);
+
+            if (Match(THIS)) return new Expr.This(Previous());
 
             if (Match(IDENTIFIER)) return new Expr.Variable(Previous());
 

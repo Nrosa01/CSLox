@@ -8,9 +8,12 @@
             T VisitAssignExpr(Assign expr);
             T VisitBinaryExpr(Binary expr);
             T VisitCallExpr(Call expr);
+            T VisitGetExpr(Get expr);
             T VisitGroupingExpr(Grouping expr);
             T VisitLiteralExpr(Literal expr);
             T VisitLogicalExpr(Logical expr);
+            T VisitSetExpr(Set expr);
+            T VisitThisExpr(This expr);
             T VisitUnaryExpr(Unary expr);
             T VisitVariableExpr(Variable expr);
         }
@@ -57,6 +60,19 @@ internal class Call: Expr {
     readonly public Token paren;
     readonly public List<Expr> arguments;
 }
+internal class Get: Expr {
+    internal Get(Expr @object, Token name) {
+        this.@object = @object;
+        this.name = name;
+    }
+
+    internal override T Accept<T>(IVisitor<T> visitor) {
+        return visitor.VisitGetExpr(this);
+    }
+
+    readonly public Expr @object;
+    readonly public Token name;
+}
 internal class Grouping: Expr {
     internal Grouping(Expr expression) {
         this.expression = expression;
@@ -93,6 +109,32 @@ internal class Logical: Expr {
     readonly public Expr left;
     readonly public Token @operator;
     readonly public Expr right;
+}
+internal class Set: Expr {
+    internal Set(Expr @object, Token name, Expr value) {
+        this.@object = @object;
+        this.name = name;
+        this.value = value;
+    }
+
+    internal override T Accept<T>(IVisitor<T> visitor) {
+        return visitor.VisitSetExpr(this);
+    }
+
+    readonly public Expr @object;
+    readonly public Token name;
+    readonly public Expr value;
+}
+internal class This: Expr {
+    internal This(Token keyword) {
+        this.keyword = keyword;
+    }
+
+    internal override T Accept<T>(IVisitor<T> visitor) {
+        return visitor.VisitThisExpr(this);
+    }
+
+    readonly public Token keyword;
 }
 internal class Unary: Expr {
     internal Unary(Token @operator, Expr right) {
