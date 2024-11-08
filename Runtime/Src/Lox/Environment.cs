@@ -8,7 +8,7 @@ namespace CSLox.Src.Lox
 {
     internal class Environment
     {
-        private readonly Environment? enclosing = null;
+        internal readonly Environment? enclosing = null;
         private readonly Dictionary<String, object?> values = new Dictionary<string, object?>();
 
         public Environment() { }

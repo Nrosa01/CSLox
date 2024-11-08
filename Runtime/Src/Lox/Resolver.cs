@@ -22,7 +22,7 @@ namespace CSLox.Src.Lox
 
         private enum ClassType
         {
-            NONE, CLASS
+            NONE, CLASS, SUBCLASS
         }
 
         public object? VisitAssignExpr(Expr.Assign expr)
@@ -219,6 +219,21 @@ namespace CSLox.Src.Lox
             Declare(stmt.name);
             Define(stmt.name);
 
+            if (stmt.superclass != null && stmt.name.lexeme.Equals(stmt.superclass.name.lexeme))
+                Lox.Error(stmt.superclass.name, "A class can't inherit from itself");
+
+            if (stmt.superclass != null)
+            {
+                currentClass = ClassType.SUBCLASS;
+                Resolve(stmt.superclass);
+            }
+
+            if(stmt.superclass != null)
+            {
+                BeginScope();
+                scopes.Peek().Add("super", true);
+            }
+
             BeginScope();
             scopes.Peek().Add("this", true);
 
@@ -232,8 +247,11 @@ namespace CSLox.Src.Lox
             }
 
             EndScope();
-            
-            currentClass = enclosingClass;
+
+            if (stmt.superclass != null)
+                EndScope();
+
+                currentClass = enclosingClass;
             return null;
         }
 
@@ -256,6 +274,26 @@ namespace CSLox.Src.Lox
             {
                 Lox.Error(expr.keyword, "Can't use 'this' outside of a class.");
                 return null;
+            }
+
+            ResolveLocal(expr, expr.keyword);
+            return null;
+        }
+
+        public object? VisitSuperExpr(Expr.Super expr)
+        {
+            switch (currentClass)
+            {
+                case ClassType.NONE:
+                    Lox.Error(expr.keyword, "Can't use 'super' outside of a class.");
+                    break;
+                case ClassType.CLASS:
+                    Lox.Error(expr.keyword, "Can't use 'super' with no superclass");
+                    break;
+                case ClassType.SUBCLASS:
+                    break;
+                default:
+                    break;
             }
 
             ResolveLocal(expr, expr.keyword);

@@ -13,6 +13,7 @@
             T VisitLiteralExpr(Literal expr);
             T VisitLogicalExpr(Logical expr);
             T VisitSetExpr(Set expr);
+            T VisitSuperExpr(Super expr);
             T VisitThisExpr(This expr);
             T VisitUnaryExpr(Unary expr);
             T VisitVariableExpr(Variable expr);
@@ -124,6 +125,19 @@ internal class Set: Expr {
     readonly public Expr @object;
     readonly public Token name;
     readonly public Expr value;
+}
+internal class Super: Expr {
+    internal Super(Token keyword, Token method) {
+        this.keyword = keyword;
+        this.method = method;
+    }
+
+    internal override T Accept<T>(IVisitor<T> visitor) {
+        return visitor.VisitSuperExpr(this);
+    }
+
+    readonly public Token keyword;
+    readonly public Token method;
 }
 internal class This: Expr {
     internal This(Token keyword) {

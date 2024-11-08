@@ -27,8 +27,9 @@ internal class Block: Stmt {
     readonly public List<Stmt> statements;
 }
 internal class Class: Stmt {
-    internal Class(Token name, List<Stmt.Function> methods) {
+    internal Class(Token name, Expr.Variable? superclass, List<Stmt.Function> methods) {
         this.name = name;
+        this.superclass = superclass;
         this.methods = methods;
     }
 
@@ -37,6 +38,7 @@ internal class Class: Stmt {
     }
 
     readonly public Token name;
+    readonly public Expr.Variable? superclass;
     readonly public List<Stmt.Function> methods;
 }
 internal class Expression: Stmt {

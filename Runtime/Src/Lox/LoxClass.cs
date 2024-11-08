@@ -2,16 +2,11 @@
 
 namespace CSLox.Src.Lox
 {
-    internal class LoxClass : ILoxCallable
+    internal class LoxClass(string lexeme, LoxClass? superclass, Dictionary<string, LoxFunction> methods) : ILoxCallable
     {
-        internal readonly string name;
-        internal readonly Dictionary<string, LoxFunction> methods;
-
-        public LoxClass(string lexeme, Dictionary<string, LoxFunction> methods)
-        {
-            this.name = lexeme;
-            this.methods = methods;
-        }
+        internal readonly string name = lexeme;
+        internal readonly LoxClass? superclass = superclass;
+        internal readonly Dictionary<string, LoxFunction> methods = methods;
 
         public int Arity
         {
@@ -33,6 +28,6 @@ namespace CSLox.Src.Lox
 
         public override string ToString() => name;
 
-        internal LoxFunction? FindMethod(string name) => methods.GetValueOrDefault(name);
+        internal LoxFunction? FindMethod(string name) => superclass?.FindMethod(name) ?? methods.GetValueOrDefault(name);
     }
 }
